@@ -315,16 +315,10 @@
 	</build>
 	
 	<distributionManagement>
-		<snapshotRepository>
-			<id>snapshots</id>
-			<name>Velocidi Nexus Snapshots</name>
-			<url>http://nexus.hal9000.velocidi.io/content/repositories/snapshots</url>
-		</snapshotRepository>
-
 		<repository>
-			<id>releases</id>
-			<name>Velocidi Nexus Releases</name>
-			<url>http://nexus.hal9000.velocidi.io/content/repositories/releases</url>
+			<id>github</id>
+			<name>GitHub adzerk Apache Maven Packages</name>
+			<url>https://maven.pkg.github.com/adzerk/elasticsearch-sql</url>
 		</repository>
 	</distributionManagement>
 
