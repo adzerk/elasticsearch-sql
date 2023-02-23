@@ -64,6 +64,8 @@ public class FieldMaker {
                 return makeFilterMethodField(mExpr, alias);
             } else if ("filters".equalsIgnoreCase(methodName)) {
                 return makeFiltersMethodField(mExpr, alias);
+            } else if ("field_sort".equalsIgnoreCase(methodName)) {
+                return makeFieldSortMethodField(mExpr, alias);
             }
 
             return makeMethodField(methodName, mExpr.getParameters(), null, alias, tableAlias, true);
@@ -185,6 +187,34 @@ public class FieldMaker {
         methodParameters.add(new KVValue("otherBucketKey", otherBucketKey));
         methodParameters.add(new KVValue("filters", filterFields));
         return new MethodField("filters", methodParameters, null, alias);
+    }
+
+    private static Field makeFieldSortMethodField(SQLMethodInvokeExpr fieldSortMethod, String alias) throws SqlParseException {
+        String fieldName = null;
+        List<SQLExpr> parameters = fieldSortMethod.getParameters();
+        List<KVValue> methodParameters = new ArrayList<>();
+        for (SQLExpr parameter : parameters) {
+            if (parameter instanceof SQLIdentifierExpr) {
+                fieldName = parameter.toString();
+            } else if (parameter instanceof SQLBinaryOpExpr) {
+                String key = ((SQLBinaryOpExpr) parameter).getLeft().toString();
+                Object value = Util.expr2Object(((SQLBinaryOpExpr) parameter).getRight());
+                if ("field".equals(key)) {
+                    fieldName = value.toString();
+                } else {
+                    methodParameters.add(new KVValue(key, value));
+                }
+            } else {
+                throw new SqlParseException("unknown parameter : " + parameter);
+            }
+        }
+
+        if (fieldName == null) {
+            throw new SqlParseException("field name not found");
+        }
+
+        methodParameters.add(new KVValue("field", fieldName));
+        return new MethodField("field_sort", methodParameters, null, alias);
     }
 
     private static Field handleIdentifier(NestedType nestedType, String alias, String tableAlias) throws SqlParseException {
@@ -386,7 +416,7 @@ public class FieldMaker {
             Tuple<String, String> newFunctions = null;
             try {
                 //added by xzb 构造script时，二元操作符可能是多样的 case_new 语法，需要 binaryOperatorNames 参数
-                newFunctions = SQLFunctions.function(finalMethodName, paramers, paramers.get(0).key,first, binaryOperatorName, binaryOperatorNames);
+                newFunctions = SQLFunctions.function(finalMethodName, paramers, !paramers.isEmpty() ? paramers.get(0).key : null,first, binaryOperatorName, binaryOperatorNames);
             } catch (Exception e) {
                 e.printStackTrace();
             }
